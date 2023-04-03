@@ -17152,7 +17152,7 @@ __forceinline BOOLEAN __cdecl CompareAnsi(char* u1, char* u2)
 
 __forceinline char* __cdecl Separator(char* full_name)
 {
-    SIZE_T len = strlen(full_name);
+    SIZE_T len = (SIZE_T)StringLengthA(full_name);
 
     for (SIZE_T i = 0; i < len; i++)
     {
@@ -17210,7 +17210,6 @@ __forceinline LPVOID __cdecl NtCurrentPeb(void)
 #endif
 }
 
-//https://en.wikipedia.org/wiki/Win32_Thread_Information_Block
 __forceinline LPVOID __cdecl NtCurrentTIBOrTEB() {
 #if defined(_WIN64)
     UINT64 pTibOrTEBLocation = __readgsqword(0x30);
