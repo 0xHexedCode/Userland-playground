@@ -1,8 +1,10 @@
 # Userland-playground
-My own personal codes for userland stuff.
+
+My own personal codes for userland stuff. Samples of use will come later.
 
 ## Content
-* NTHeader.h : nearly all definitions I need to code windows stuff + some functions I wrote
+
+* NTHeader.h : nearly all definitions I need to code windows stuff + some functions I wrote. Header will be expanded with time.
 
 ### Personal Functions :
 
