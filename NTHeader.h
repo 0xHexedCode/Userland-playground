@@ -3946,7 +3946,29 @@ typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
     WORD   e_oeminfo;                   // OEM information; e_oemid specific
     WORD   e_res2[10];                  // Reserved words
     LONG   e_lfanew;                    // File address of new exe header
+
+    /* offset=0, size=2 */
+    /* offset=2, size=2 */
+    /* offset=4, size=2 */
+    /* offset=6, size=2 */
+    /* offset=8, size=2 */
+    /* offset=10, size=2 */
+    /* offset=12, size=2 */
+    /* offset=14, size=2 */
+    /* offset=16, size=2 */
+    /* offset=18, size=2 */
+    /* offset=20, size=2 */
+    /* offset=22, size=2 */
+    /* offset=24, size=2 */
+    /* offset=26, size=2 */
+    /* offset=28, size=8 */
+    /* offset=36, size=2 */
+    /* offset=38, size=2 */
+    /* offset=40, size=20 */
+    /* offset=60, size=4 */
 } IMAGE_DOS_HEADER, * PIMAGE_DOS_HEADER;
+
+
 
 typedef struct _IMAGE_OS2_HEADER
 {
@@ -10046,6 +10068,20 @@ typedef struct DECLSPEC_ALIGN(16) DECLSPEC_NOINITALL _CONTEXT {
 #define WOW64_CONTEXT_ALL       (WOW64_CONTEXT_CONTROL | WOW64_CONTEXT_INTEGER | WOW64_CONTEXT_SEGMENTS | \
                                  WOW64_CONTEXT_FLOATING_POINT | WOW64_CONTEXT_DEBUG_REGISTERS | \
                                  WOW64_CONTEXT_EXTENDED_REGISTERS)
+
+#define CONTEXT_i386    0x00010000    // this assumes that i386 and
+#define CONTEXT_i486    0x00010000    // i486 have identical context records
+
+// end_wx86
+
+#define CONTEXT_CONTROL         (CONTEXT_i386 | 0x00000001L) // SS:SP, CS:IP, FLAGS, BP
+#define CONTEXT_INTEGER         (CONTEXT_i386 | 0x00000002L) // AX, BX, CX, DX, SI, DI
+#define CONTEXT_SEGMENTS        (CONTEXT_i386 | 0x00000004L) // DS, ES, FS, GS
+#define CONTEXT_FLOATING_POINT  (CONTEXT_i386 | 0x00000008L) // 387 state
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_i386 | 0x00000010L) // DB 0-3,6,7
+
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER |\
+                      CONTEXT_SEGMENTS)
 
 typedef enum _WOW64_SHARED_INFORMATION // int32_t
 {
@@ -16566,26 +16602,104 @@ typedef enum _HEAP_INFORMATION_CLASS // int32_t
     HeapSetDebuggingInformation = -0x7ffffffe
 }HEAP_INFORMATION_CLASS, * PHEAP_INFORMATION_CLASS;
 
+//
+// Public Heap Flags
+//
+#define HEAP_NO_SERIALIZE                                   0x00000001
+#define HEAP_GROWABLE                                       0x00000002
+#define HEAP_GENERATE_EXCEPTIONS                            0x00000004
+#define HEAP_ZERO_MEMORY                                    0x00000008
+#define HEAP_REALLOC_IN_PLACE_ONLY                          0x00000010
+#define HEAP_TAIL_CHECKING_ENABLED                          0x00000020
+#define HEAP_FREE_CHECKING_ENABLED                          0x00000040
+#define HEAP_DISABLE_COALESCE_ON_FREE                       0x00000080
+#define HEAP_CREATE_ALIGN_16                                0x00010000
+#define HEAP_CREATE_ENABLE_TRACING                          0x00020000
+#define HEAP_CREATE_ENABLE_EXECUTE                          0x00040000
+
+//
+// User-Defined Heap Flags and Classes
+//
+#define HEAP_SETTABLE_USER_VALUE                            0x00000100
+#define HEAP_SETTABLE_USER_FLAG1                            0x00000200
+#define HEAP_SETTABLE_USER_FLAG2                            0x00000400
+#define HEAP_SETTABLE_USER_FLAG3                            0x00000800
+#define HEAP_SETTABLE_USER_FLAGS                            0x00000E00
+#define HEAP_CLASS_0                                        0x00000000
+#define HEAP_CLASS_1                                        0x00001000
+#define HEAP_CLASS_2                                        0x00002000
+#define HEAP_CLASS_3                                        0x00003000
+#define HEAP_CLASS_4                                        0x00004000
+#define HEAP_CLASS_5                                        0x00005000
+#define HEAP_CLASS_6                                        0x00006000
+#define HEAP_CLASS_7                                        0x00007000
+#define HEAP_CLASS_8                                        0x00008000
+#define HEAP_CLASS_MASK                                     0x0000F000
+
+//
+// Internal HEAP Structure Flags
+//
+#define HEAP_FLAG_PAGE_ALLOCS                               0x01000000
+#define HEAP_PROTECTION_ENABLED                             0x02000000
+#define HEAP_BREAK_WHEN_OUT_OF_VM                           0x04000000
+#define HEAP_NO_ALIGNMENT                                   0x08000000
+#define HEAP_CAPTURE_STACK_BACKTRACES                       0x08000000
+#define HEAP_SKIP_VALIDATION_CHECKS                         0x10000000
+#define HEAP_VALIDATE_ALL_ENABLED                           0x20000000
+#define HEAP_VALIDATE_PARAMETERS_ENABLED                    0x40000000
+#define HEAP_LOCK_USER_ALLOCATED                            0x80000000
+
+//
+// Heap Validation Flags
+//
+#define HEAP_CREATE_VALID_MASK                              \
+    (HEAP_NO_SERIALIZE              |                       \
+     HEAP_GROWABLE                  |                       \
+     HEAP_GENERATE_EXCEPTIONS       |                       \
+     HEAP_ZERO_MEMORY               |                       \
+     HEAP_REALLOC_IN_PLACE_ONLY     |                       \
+     HEAP_TAIL_CHECKING_ENABLED     |                       \
+     HEAP_FREE_CHECKING_ENABLED     |                       \
+     HEAP_DISABLE_COALESCE_ON_FREE  |                       \
+     HEAP_CLASS_MASK                |                       \
+     HEAP_CREATE_ALIGN_16           |                       \
+     HEAP_CREATE_ENABLE_TRACING     |                       \
+     HEAP_CREATE_ENABLE_EXECUTE)
+
 typedef enum _HEAP_FLAGS
 {
     HEAP_NONE = 0x0,
-    HEAP_NO_SERIALIZE = 0x1,
-    HEAP_GROWABLE = 0x2,
-    HEAP_GENERATE_EXCEPTIONS = 0x4,
-    HEAP_ZERO_MEMORY = 0x8,
-    HEAP_REALLOC_IN_PLACE_ONLY = 0x10,
-    HEAP_TAIL_CHECKING_ENABLED = 0x20,
-    HEAP_FREE_CHECKING_ENABLED = 0x40,
-    HEAP_DISABLE_COALESCE_ON_FREE = 0x80,
-    HEAP_CREATE_ALIGN_16 = 0x10000,
-    HEAP_CREATE_ENABLE_TRACING = 0x20000,
-    HEAP_CREATE_ENABLE_EXECUTE = 0x40000,
+    //HEAP_NO_SERIALIZE = 0x1,
+    //HEAP_GROWABLE = 0x2,
+    //HEAP_GENERATE_EXCEPTIONS = 0x4,
+    //HEAP_ZERO_MEMORY = 0x8,
+    //HEAP_REALLOC_IN_PLACE_ONLY = 0x10,
+    //HEAP_TAIL_CHECKING_ENABLED = 0x20,
+    //HEAP_FREE_CHECKING_ENABLED = 0x40,
+    //HEAP_DISABLE_COALESCE_ON_FREE = 0x80,
+    //HEAP_CREATE_ALIGN_16 = 0x10000,
+    //HEAP_CREATE_ENABLE_TRACING = 0x20000,
+    //HEAP_CREATE_ENABLE_EXECUTE = 0x40000,
     HEAP_MAXIMUM_TAG = 0xfff,
     HEAP_PSEUDO_TAG_FLAG = 0x8000,
     HEAP_TAG_SHIFT = 0x12,
     HEAP_CREATE_SEGMENT_HEAP = 0x100,
     HEAP_CREATE_HARDENED = 0x200
 }HEAP_FLAGS, * PHEAP_FLAGS;
+
+typedef struct _RTL_HEAP_PARAMETERS {
+    ULONG                    Length;
+    SIZE_T                   SegmentReserve;
+    SIZE_T                   SegmentCommit;
+    SIZE_T                   DeCommitFreeBlockThreshold;
+    SIZE_T                   DeCommitTotalFreeThreshold;
+    SIZE_T                   MaximumAllocationSize;
+    SIZE_T                   VirtualMemoryThreshold;
+    SIZE_T                   InitialCommit;
+    SIZE_T                   InitialReserve;
+    PVOID CommitRoutine; //PRTL_HEAP_COMMIT_ROUTINE
+    SIZE_T                   Reserved[2];
+} RTL_HEAP_PARAMETERS, * PRTL_HEAP_PARAMETERS;
 
 typedef struct _HEAP_OPTIMIZE_RESOURCES_INFORMATION
 {
@@ -16725,6 +16839,14 @@ typedef struct _HEAP_EXTENDED_INFORMATION
 }HEAP_EXTENDED_INFORMATION, * PHEAP_EXTENDED_INFORMATION;
 
 typedef DWORD WINAPI CSRGETPROCESSID(VOID);
+typedef
+VOID
+(NTAPI* PIO_APC_ROUTINE) (
+    PVOID ApcContext,               //IN 
+    PIO_STATUS_BLOCK IoStatusBlock, //IN 
+    ULONG Reserved                  //IN
+    );
+
 typedef CSRGETPROCESSID* LPCSRGETPROCESSID;
 
 typedef NTSTATUS NTAPI DBGPRINT(
@@ -16754,6 +16876,16 @@ typedef NTSTATUS NTAPI LDRLOADDLL(
     PVOID* BaseAddress
 ); typedef LDRLOADDLL* LPLDRLOADDLL;
 
+typedef PVOID __cdecl MEMSET(
+    PVOID pointer, 
+    LONG value, 
+    SIZE_T count
+); typedef MEMSET* LPMEMSET;
+
+typedef NTSTATUS NTAPI NTALERTHREAD(
+    HANDLE ThreadHandle //in
+); typedef NTALERTHREAD* LPNTALERTHREAD;
+
 typedef NTSTATUS NTAPI NTALLOCATEVIRTUALMEMORY(
     HANDLE     ProcessHandle,
     PVOID* BaseAddress,
@@ -16767,6 +16899,20 @@ typedef NTSTATUS NTAPI NTCLOSE(
     HANDLE Handle
 ); typedef NTCLOSE* LPNTCLOSE;
 
+typedef NTSTATUS NTAPI NTCREATEFILE(
+    PHANDLE            FileHandle,          //[out]          
+    ACCESS_MASK        DesiredAccess,       //[in]           
+    POBJECT_ATTRIBUTES ObjectAttributes,    //[in]           
+    PIO_STATUS_BLOCK   IoStatusBlock,       //[out]
+    PLARGE_INTEGER     AllocationSize,      //[in, optional]
+    ULONG              FileAttributes,      //[in]           
+    ULONG              ShareAccess,         //[in]
+    ULONG              CreateDisposition,   //[in]
+    ULONG              CreateOptions,       //[in]
+    PVOID              EaBuffer,            //[in]
+    ULONG              EaLength             //[in]
+); typedef NTCREATEFILE* LPNTCREATEFILE;
+
 typedef NTSTATUS NTAPI NTCREATEPROCESS(
     PHANDLE ProcessHandle,
     ACCESS_MASK DesiredAccess,
@@ -16776,7 +16922,7 @@ typedef NTSTATUS NTAPI NTCREATEPROCESS(
     HANDLE SectionHandle,
     HANDLE DebugPort,
     HANDLE TokenHandle
-); typedef NTCREATEPROCESS* PNTCREATEPROCESS;
+); typedef NTCREATEPROCESS* LPNTCREATEPROCESS;
 
 typedef NTSTATUS NTAPI NTCREATEPROCESSEX(
     PHANDLE ProcessHandle,
@@ -16788,7 +16934,7 @@ typedef NTSTATUS NTAPI NTCREATEPROCESSEX(
     HANDLE DebugPort,
     HANDLE TokenHandle,
     ULONG Reserved // JobMemberLevel
-); typedef NTCREATEPROCESSEX* PNTCREATEPROCESSEX;
+); typedef NTCREATEPROCESSEX* LPNTCREATEPROCESSEX;
 
 typedef NTSTATUS NTAPI NTCREATESECTION(
     PHANDLE SectionHandle,                          //_Out_
@@ -16821,7 +16967,21 @@ typedef NTSTATUS NTAPI NTCREATETHREAD(
     PCONTEXT ThreadContext,
     PINITIAL_TEB InitialTeb,
     BOOLEAN CreateSuspended
-); typedef NTCREATETHREAD* PNTCREATETHREAD;
+); typedef NTCREATETHREAD* LPNTCREATETHREAD;
+
+typedef NTSTATUS NTAPI NTCREATETHREADEX(
+    PHANDLE ThreadHandle,                   //_Out_
+    ACCESS_MASK DesiredAccess,              //_In_
+    POBJECT_ATTRIBUTES ObjectAttributes,    //_In_opt_
+    HANDLE ProcessHandle,                   //_In_
+    PVOID StartRoutine,                     //_In_ PUSER_THREAD_START_ROUTINE
+    PVOID Argument,                         //_In_opt_
+    ULONG CreateFlags,                      //_In_ THREAD_CREATE_FLAGS_*
+    SIZE_T ZeroBits,                        //_In_
+    SIZE_T StackSize,                       //_In_
+    SIZE_T MaximumStackSize,                //_In_
+    PPS_ATTRIBUTE_LIST AttributeList        //_In_opt_
+); typedef NTCREATETHREADEX* LPNTCREATETHREADEX;
 
 typedef NTSTATUS NTAPI NTCREATEUSERPROCESS(
     PHANDLE ProcessHandle,
@@ -16836,6 +16996,11 @@ typedef NTSTATUS NTAPI NTCREATEUSERPROCESS(
     PPS_CREATE_INFO CreateInfo,
     PPS_ATTRIBUTE_LIST AttributeList
 ); typedef NTCREATEUSERPROCESS* LPNTCREATEUSERPROCESS;
+
+typedef NTSTATUS NTAPI NTDELAYEXECUTION(
+    BOOLEAN Alertable,                 //_In_
+    PLARGE_INTEGER Timeout
+); typedef NTDELAYEXECUTION* LPNTDELAYEXECUTION;
 
 typedef NTSTATUS NTAPI NTDELETEFILE(
     POBJECT_ATTRIBUTES ObjectAttributes                 //_In_
@@ -16906,12 +17071,19 @@ typedef NTSTATUS NTAPI NTOPENPROCESS(
     PCLIENT_ID         ClientId
 ); typedef NTOPENPROCESS* LPNTOPENPROCESS;
 
+typedef NTSTATUS NTAPI NTOPENTHREAD(
+    PHANDLE            ThreadHandle,        //_Out_ 
+    ACCESS_MASK        DesiredAccess,       //_In_
+    POBJECT_ATTRIBUTES ObjectAttributes,    //_In_
+    PCLIENT_ID         ClientId             //_In_
+); typedef NTOPENTHREAD* LPNTOPENTHREAD;
+
 typedef NTSTATUS NTAPI NTPROTECTVIRTUALMEMORY(
-    HANDLE                 ProcessHandle,
-    PVOID* BaseAddress,
-    PULONG                 NumberOfBytesToProtect,
-    ULONG                  NewAccessProtection,
-    PULONG                 OldAccessProtection
+    HANDLE                  ProcessHandle,
+    PVOID*                  BaseAddress,
+    PULONG                  NumberOfBytesToProtect,
+    ULONG                   NewAccessProtection,
+    PULONG                  OldAccessProtection
 ); typedef NTPROTECTVIRTUALMEMORY* LPNTPROTECTVIRTUALMEMORY;
 
 typedef NTSTATUS NTAPI NTQUERYINFORMATIONBYNAME(
@@ -16945,6 +17117,29 @@ typedef NTSTATUS NTAPI NTQUERYSYSTEMINFORMATION(
     PULONG                         ReturnLength
 ); typedef NTQUERYSYSTEMINFORMATION* LPNTQUERYSYSTEMINFORMATION;
 
+typedef VOID
+(NTAPI* PKNORMAL_ROUTINE)(
+    PVOID NormalContext,    //IN OPTIONAL
+    PVOID SystemArgument1,  //IN OPTIONAL
+    PVOID SystemArgument2); //IN OPTIONAL
+
+typedef NTSTATUS NTAPI NTQUEUEAPCTHREAD(
+    HANDLE  	        ThreadHandle,           //IN
+    PIO_APC_ROUTINE  	ApcRoutine,             //IN //PIO_APC_ROUTINE OR ? PKNORMAL_ROUTINE
+    PVOID  	            ApcRoutineContext,      //IN
+    PIO_STATUS_BLOCK  	ApcStatusBlock,         //IN
+    PVOID  	            ApcReserved             //IN
+); typedef NTQUEUEAPCTHREAD* LPNTQUEUEAPCTHREAD;
+
+typedef NTSTATUS NTAPI NTQUEUEAPCTHREADEX(
+    HANDLE ThreadHandle,        //_In_
+    HANDLE ReserveHandle,       //_In_opt_ NtAllocateReserveObject
+    PIO_APC_ROUTINE ApcRoutine, //_In_
+    PVOID ApcArgument1,         //_In_opt_
+    PVOID ApcArgument2,         //_In_opt_
+    PVOID ApcArgument3          //_In_opt_
+); typedef NTQUEUEAPCTHREADEX* LPNTQUEUEAPCTHREADEX;
+
 typedef NTSTATUS NTAPI NTRAISEHARDERROR(
     NTSTATUS ErrorStatus,                           //_In_
     ULONG NumberOfParameters,                       //_In_
@@ -16966,6 +17161,14 @@ typedef NTSTATUS NTAPI NTREADFILE(
     PULONG           Key
 ); typedef NTREADFILE* LPNTREADFILE;
 
+typedef NTSTATUS NTAPI NTREADVIRTUALMEMORY(
+    HANDLE  	ProcessHandle,          //IN
+    PVOID  	    BaseAddress,            //IN
+    PVOID  	    Buffer,                 //OUT
+    SIZE_T  	NumberOfBytesToRead,    //IN
+    PSIZE_T     NumberOfBytesRead  	    //OUT OPTIONAL
+); typedef NTREADVIRTUALMEMORY* LPNTREADVIRTUALMEMORY;
+
 typedef NTSTATUS NTAPI  NTREMOVEPROCESSDEBUG(
     HANDLE ProcessHandle,                               //_In_
     HANDLE DebugObjectHandle                            //_In_
@@ -16973,7 +17176,12 @@ typedef NTSTATUS NTAPI  NTREMOVEPROCESSDEBUG(
 
 typedef NTSTATUS NTAPI NTRESUMEPROCESS(
     HANDLE ProcessHandle
-); typedef NTRESUMEPROCESS* PNTRESUMEPROCESS;
+); typedef NTRESUMEPROCESS* LPNTRESUMEPROCESS;
+
+typedef NTSTATUS NTAPI NTRESUMETHREAD(
+    HANDLE ThreadHandle,            //_In_
+    PULONG PreviousSuspendCount     //_Out_opt_
+); typedef NTRESUMETHREAD* LPNTRESUMETHREAD;
 
 typedef NTSTATUS NTAPI NTSETCONTEXTTHREAD(
     HANDLE ThreadHandle,                                //_In_
@@ -17012,12 +17220,21 @@ typedef NTSTATUS NTAPI NTSHUTDOWNSYSTEM(
 
 typedef NTSTATUS NTAPI NTSUSPENDPROCESS(
     HANDLE ProcessHandle
-); typedef NTSUSPENDPROCESS* PNTSUSPENDPROCESS;
+); typedef NTSUSPENDPROCESS* LPNTSUSPENDPROCESS;
+
+typedef NTSTATUS NTAPI NTSUSPENDTHREAD(
+    HANDLE ThreadHandle,            //_In_
+    PULONG PreviousSuspendCount     //_Out_opt_
+); typedef NTSUSPENDTHREAD* LPNTSUSPENDTHREAD;
 
 typedef NTSTATUS NTAPI NTTERMINATEPROCESS(
     HANDLE ProcessHandle,
     NTSTATUS ExitStatus
-); typedef NTTERMINATEPROCESS* PNTTERMINATEPROCESS;
+); typedef NTTERMINATEPROCESS* LPNTTERMINATEPROCESS;
+
+typedef NTSTATUS NTAPI NTTESTALERT(
+    void
+); typedef NTTESTALERT* LPNTTESTALERT;
 
 typedef NTSTATUS NTAPI NTUNMAPVIEWOFSECTION(
     HANDLE ProcessHandle,                               //_In_
@@ -17029,6 +17246,18 @@ typedef NTSTATUS NTAPI NTUNMAPVIEWOFSECTIONEX(
     PVOID BaseAddress,                                  //_In_opt_
     ULONG Flags                                         //_In_
 ); typedef NTUNMAPVIEWOFSECTIONEX* LPNTUNMAPVIEWOFSECTIONEX;
+
+typedef NTSTATUS NTAPI NTWRITEFILE(
+    HANDLE              FileHandle,                 //[in]            
+    HANDLE              Event,                      //[in, optional]
+    PIO_APC_ROUTINE     ApcRoutine,                 //[in, optional]
+    PVOID               ApcContext,                 //[in, optional]
+    PIO_STATUS_BLOCK    IoStatusBlock,              //[out] 
+    PVOID               Buffer,                     //[in]
+    ULONG               Length,                     //[in]
+    PLARGE_INTEGER      ByteOffset,                 //[in, optional]
+    PULONG              Key                         //[in, optional]
+); typedef NTWRITEFILE* LPNTWRITEFILE;
 
 typedef NTSTATUS NTAPI NTWRITEVIRTUALMEMORY(
     HANDLE ProcessHandle,
@@ -17079,6 +17308,28 @@ typedef NTSTATUS NTAPI RTLADJUSTPRIVILEGE(
     PBOOLEAN WasEnabled                                                 //_Out_
 ); typedef RTLADJUSTPRIVILEGE* LPRTLADJUSTPRIVILEGE;
 
+typedef PVOID NTAPI RTLCREATEHEAP(
+    ULONG                Flags,         //[in]
+    PVOID                HeapBase,      //[in, optional]
+    SIZE_T               ReserveSize,   //[in, optional]
+    SIZE_T               CommitSize,    //[in, optional]
+    PVOID                Lock,          //[in, optional]
+    PRTL_HEAP_PARAMETERS Parameters     //[in, optional]
+); typedef RTLCREATEHEAP* LPRTLCREATEHEAP;
+
+typedef NTSTATUS NTAPI RTCREATETAGHEAP(
+    PVOID HeapHandle,                                                    //_In_
+    DWORD Flags,                                                     //_In_
+    PWSTR TagName,                                                     //_In_
+    PWSTR TagSubName                                                 //_Out_
+); typedef RTCREATETAGHEAP* LPRTCREATETAGHEAP;
+
+typedef NTSTATUS NTAPI RTLCREATEMEMORYZONE(
+    PVOID* MemoryZone,                                                    //_In_
+    SIZE_T IniatalSize,
+    DWORD Flags
+); typedef RTLCREATEMEMORYZONE* LPRTLCREATEMEMORYZONE;
+
 typedef NTSTATUS NTAPI RTLINITANSISTRING(
     PANSI_STRING  DestinationString,                                    //_Out_ 
     PCSTR  SourceString                                                 //_In_opt_z_
@@ -17089,6 +17340,97 @@ typedef NTSTATUS NTAPI RTLINITUNICODESTRING(
     PWSTR SourceString                                                  //_In_opt_z_
 ); typedef RTLINITUNICODESTRING* LPRTLINITUNICODESTRING;
 
+//Nt Global Flags values
+#define FLG_STOP_ON_EXCEPTION 0x00000001 // uk
+#define FLG_SHOW_LDR_SNAPS 0x00000002 // uk
+#define FLG_DEBUG_INITIAL_COMMAND 0x00000004 // k
+#define FLG_STOP_ON_HUNG_GUI 0x00000008 // k
+
+#define FLG_HEAP_ENABLE_TAIL_CHECK 0x00000010 // u
+#define FLG_HEAP_ENABLE_FREE_CHECK 0x00000020 // u
+#define FLG_HEAP_VALIDATE_PARAMETERS 0x00000040 // u
+#define FLG_HEAP_VALIDATE_ALL 0x00000080 // u
+
+#define FLG_APPLICATION_VERIFIER 0x00000100 // u
+#define FLG_MONITOR_SILENT_PROCESS_EXIT 0x00000200 // uk
+#define FLG_POOL_ENABLE_TAGGING 0x00000400 // k
+#define FLG_HEAP_ENABLE_TAGGING 0x00000800 // u
+
+#define FLG_USER_STACK_TRACE_DB 0x00001000 // u,32
+#define FLG_KERNEL_STACK_TRACE_DB 0x00002000 // k,32
+#define FLG_MAINTAIN_OBJECT_TYPELIST 0x00004000 // k
+#define FLG_HEAP_ENABLE_TAG_BY_DLL 0x00008000 // u
+
+#define FLG_DISABLE_STACK_EXTENSION 0x00010000 // u
+#define FLG_ENABLE_CSRDEBUG 0x00020000 // k
+#define FLG_ENABLE_KDEBUG_SYMBOL_LOAD 0x00040000 // k
+#define FLG_DISABLE_PAGE_KERNEL_STACKS 0x00080000 // k
+
+#define FLG_ENABLE_SYSTEM_CRIT_BREAKS 0x00100000 // u
+#define FLG_HEAP_DISABLE_COALESCING 0x00200000 // u
+#define FLG_ENABLE_CLOSE_EXCEPTIONS 0x00400000 // k
+#define FLG_ENABLE_EXCEPTION_LOGGING 0x00800000 // k
+
+#define FLG_ENABLE_HANDLE_TYPE_TAGGING 0x01000000 // k
+#define FLG_HEAP_PAGE_ALLOCS 0x02000000 // u
+#define FLG_DEBUG_INITIAL_COMMAND_EX 0x04000000 // k
+#define FLG_DISABLE_DBGPRINT 0x08000000 // k
+
+#define FLG_CRITSEC_EVENT_CREATION 0x10000000 // u
+#define FLG_STOP_ON_UNHANDLED_EXCEPTION 0x20000000 // u,64
+#define FLG_LDR_TOP_DOWN 0x20000000 
+#define FLG_ENABLE_HANDLE_EXCEPTIONS 0x40000000 // k
+#define FLG_DISABLE_PROTDLLS 0x80000000 // u
+
+#define FLG_VALID_BITS 0xfffffdff
+
+#define FLG_USERMODE_VALID_BITS (FLG_STOP_ON_EXCEPTION | \
+    FLG_SHOW_LDR_SNAPS | \
+    FLG_HEAP_ENABLE_TAIL_CHECK | \
+    FLG_HEAP_ENABLE_FREE_CHECK | \
+    FLG_HEAP_VALIDATE_PARAMETERS | \
+    FLG_HEAP_VALIDATE_ALL | \
+    FLG_APPLICATION_VERIFIER | \
+    FLG_HEAP_ENABLE_TAGGING | \
+    FLG_USER_STACK_TRACE_DB | \
+    FLG_HEAP_ENABLE_TAG_BY_DLL | \
+    FLG_DISABLE_STACK_EXTENSION | \
+    FLG_ENABLE_SYSTEM_CRIT_BREAKS | \
+    FLG_HEAP_DISABLE_COALESCING | \
+    FLG_DISABLE_PROTDLLS | \
+    FLG_HEAP_PAGE_ALLOCS | \
+    FLG_CRITSEC_EVENT_CREATION | \
+    FLG_LDR_TOP_DOWN)
+
+#define FLG_BOOTONLY_VALID_BITS (FLG_KERNEL_STACK_TRACE_DB | \
+    FLG_MAINTAIN_OBJECT_TYPELIST | \
+    FLG_ENABLE_CSRDEBUG | \
+    FLG_DEBUG_INITIAL_COMMAND | \
+    FLG_DEBUG_INITIAL_COMMAND_EX | \
+    FLG_DISABLE_PAGE_KERNEL_STACKS)
+
+#define FLG_KERNELMODE_VALID_BITS (FLG_STOP_ON_EXCEPTION | \
+    FLG_SHOW_LDR_SNAPS | \
+    FLG_STOP_ON_HUNG_GUI | \
+    FLG_POOL_ENABLE_TAGGING | \
+    FLG_ENABLE_KDEBUG_SYMBOL_LOAD | \
+    FLG_ENABLE_CLOSE_EXCEPTIONS | \
+    FLG_ENABLE_EXCEPTION_LOGGING | \
+    FLG_ENABLE_HANDLE_TYPE_TAGGING | \
+    FLG_DISABLE_DBGPRINT | \
+    FLG_ENABLE_HANDLE_EXCEPTIONS)
+
+typedef DWORD NTAPI RTLGETNTGLOBALFLAGS(void);
+typedef RTLGETNTGLOBALFLAGS* LPRTLGETNTGLOBALFLAGS;
+
+#define ELEVATION_UAC_ENABLED 0x1
+#define ELEVATION_VIRTUALIZATION_ENABLED 0x2
+#define ELEVATION_INSTALLER_DETECTION_ENABLED 0x4
+
+typedef NTSTATUS NTAPI RTLQUERYELEVATIONFLAGS(
+    PDWORD elevationFlags
+); typedef RTLQUERYELEVATIONFLAGS* LPRTLQUERYELEVATIONFLAGS;
+
 typedef NTSTATUS NTAPI RTLREMOTECALL(
     HANDLE ProcessHandle,                                               //_In_
     HANDLE ThreadHandle,                                                //_In_
@@ -17097,7 +17439,7 @@ typedef NTSTATUS NTAPI RTLREMOTECALL(
     PULONG_PTR Arguments,                                               //_In_opt_
     BOOLEAN PassContext,                                                //_In_
     BOOLEAN AlreadySuspended                                            //_In_
-); typedef RTLREMOTECALL* PRTLREMOTECALL;
+); typedef RTLREMOTECALL* LPRTLREMOTECALL;
 
 __forceinline WCHAR __cdecl ToLowerW(WCHAR ch)
 {
